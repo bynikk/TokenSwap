@@ -67,37 +67,49 @@ describe("TokenSwap", function () {
   });
 
   it("allow to swap from PTN to BYN", async function () {
-    const ptnTokenAmount = 3;
-    const swapAmount = 2;
+    const ptnTokenAmount = ethers.utils.parseUnits("3", 18);
+    const bynTokenAmount = ethers.utils.parseUnits("100", 18);
+    const expectedBynTokenAMount = ptnTokenAmount * 4;
+    const swapAmount = ethers.utils.parseUnits("3", 18);
+
     // buy ptn tokens for swapper
     const tx = await swapper.sendTransaction({
       value: ptnTokenAmount,
       to: token1Shop.address,
     });
     await tx.wait();
-    //buy byn tokens for swap
-    await token2Shop.connect(owner).freeReceive();
-    await token2.connect(owner).approve(token2.address, ptnTokenAmount);
-    await token2.connect(owner).transferFrom(owner.address, token2Shop.address, ptnTokenAmount);
+
+    //buy BYN tokens for swap
+    const freeTxn = await token2Shop.connect(owner).freeReceive();
+    await freeTxn.wait();
+    await token2.connect(owner).transfer(swap.address, bynTokenAmount);
+
     //set ration for PTN->BYN
     const setRateTx = await swap
       .connect(owner)
       .setRation(
-        token2.address,
         token1.address,
+        token2.address,
         ethers.utils.parseUnits("3", 18)
       );
+
     // approve amount to swap
     const approval = await token1
       .connect(swapper)
       .approve(swap.address, swapAmount);
     await approval.wait();
+
+    console.log("swapper BYN:" + (await token2.connect(swapper).balanceOf(swapper.address)));
+    console.log("swapper PTN:" + (await token1.connect(swapper).balanceOf(swapper.address)));
+      console.log("swap BYN:" + (await token2.connect(swapper).balanceOf(swap.address)));
+      console.log("swap PTN:" + (await token1.connect(swapper).balanceOf(swap.address)));
     // invoke swap function
     let swapTxn = await swap
       .connect(swapper)
       .swap(swapAmount, token1.address, token2.address);
 
     let ratio = await swap.getRation(token1.address, token2.address);
+
     expect(await swapTxn.wait())
       .to.changeTokenBalances(
         token1,
@@ -109,5 +121,10 @@ describe("TokenSwap", function () {
         [swapper, swap],
         [(swapAmount * ratio), -(swapAmount * ratio)]
       );
+      console.log("----")
+      console.log("swapper BYN:" + (await token2.connect(swapper).balanceOf(swapper.address)));
+     console.log("swapper PTN:" + (await token1.connect(swapper).balanceOf(swapper.address)));
+      console.log("swap BYN:" + (await token2.connect(swapper).balanceOf(swap.address)));
+      console.log("swap PTN:" + (await token1.connect(swapper).balanceOf(swap.address)));
   });
 });

@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./SwapManager.sol";
 
 contract TokenSwap {
     mapping(address => mapping(address => uint256)) rates;
     address payable public owner;
-
+    SwapManager swapManager;
     constructor() {
         owner = payable(msg.sender);
+        swapManager = new SwapManager(address(this));
     }
 
     modifier onlyOwner() {
@@ -18,14 +20,18 @@ contract TokenSwap {
 
     function swap(
         uint256 _amount,
-        address _token1,
-        address _token2
+        address _token1, // PTN
+        address _token2 // BYN
     ) public {
         uint256 totalAmount = uint256(
             _amount * rates[_token1][_token2]);
 
+        IERC20(_token1).approve(address(this), _amount);
         _safeTransferFrom(msg.sender, address(this), _token1, _amount);
-        _safeTransferFrom(address(this), msg.sender, _token2, totalAmount);
+        //_safeTransferFrom(address(this), msg.sender, _token2, totalAmount);
+        require(IERC20(_token2).balanceOf(address(this)) >= totalAmount, "Tokens of this type not enoght on contract balance!");
+        IERC20(_token2).approve(address(swapManager), totalAmount);
+        swapManager.SendTokensForSwap(_token2, msg.sender, totalAmount);
     }
 
     function setRation(
@@ -49,7 +55,12 @@ contract TokenSwap {
         address _token,
         uint256 _amount
     ) private {
-        bool transfer = IERC20(_token).transferFrom(_sender, _recipient, _amount);
+        bool transfer = ERC20(_token).transferFrom(_sender, _recipient, _amount);
         require(transfer, "Transfer failed!");
+    }
+
+    function depositToken(address token, uint256 amount) external {
+
+        ERC20(token).transfer(address(this), amount);
     }
 }
