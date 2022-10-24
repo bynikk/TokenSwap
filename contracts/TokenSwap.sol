@@ -28,7 +28,6 @@ contract TokenSwap {
 
         IERC20(_token1).approve(address(this), _amount);
         _safeTransferFrom(msg.sender, address(this), _token1, _amount);
-        //_safeTransferFrom(address(this), msg.sender, _token2, totalAmount);
         require(IERC20(_token2).balanceOf(address(this)) >= totalAmount, "Tokens of this type not enoght on contract balance!");
         IERC20(_token2).approve(address(swapManager), totalAmount);
         swapManager.SendTokensForSwap(_token2, msg.sender, totalAmount);
@@ -57,10 +56,5 @@ contract TokenSwap {
     ) private {
         bool transfer = ERC20(_token).transferFrom(_sender, _recipient, _amount);
         require(transfer, "Transfer failed!");
-    }
-
-    function depositToken(address token, uint256 amount) external {
-
-        ERC20(token).transfer(address(this), amount);
     }
 }
