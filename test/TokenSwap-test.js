@@ -47,12 +47,16 @@ describe("TokenSwap", function () {
   });
 
   it("should have an rates", async function () {
-    const swapRatio = 2;
+    const swapRatio = 2000;
     const setRateTx = await swap
       .connect(owner)
-      .setRation(token1.address, token2.address, swapRatio);
-    expect(await swap.getRation(token1.address, token2.address)).to.be.equal(
+      .setRatio(token1.address, token2.address, swapRatio);
+    expect(await swap.getRatio(token1.address, token2.address)).to.be.equal(
       swapRatio
+    );
+    console.log("ratio" + await swap.getRatio(token2.address, token1.address))
+    expect(await swap.getRatio(token2.address, token1.address)).to.be.equal(
+      10000 / swapRatio * 10000
     );
   });
 
@@ -60,7 +64,7 @@ describe("TokenSwap", function () {
     const ptnTokenAmount = ethers.utils.parseUnits("3", 18);
     const bynTokenAmount = ethers.utils.parseUnits("100", 18);
     const swapAmount = ethers.utils.parseUnits("3", 18);
-    const swapRatio = 4;
+    const swapRatio = 4000;
 
     // buy ptn tokens for swapper
     const tx = await swapper.sendTransaction({
@@ -77,7 +81,7 @@ describe("TokenSwap", function () {
     //set ration for PTN->BYN
     const setRateTx = await swap
       .connect(owner)
-      .setRation(token1.address, token2.address, swapRatio);
+      .setRatio(token1.address, token2.address, swapRatio);
     await setRateTx.wait();
     // approve amount to swap
     const approval = await token1
@@ -125,7 +129,7 @@ describe("TokenSwap", function () {
     //set ration for BYN->PTN
     const setRateTx = await swap
       .connect(owner)
-      .setRation(token2.address, token1.address, swapRatio);
+      .setRatio(token2.address, token1.address, swapRatio);
     await setRateTx.wait();
 
     // approve amount to swap
