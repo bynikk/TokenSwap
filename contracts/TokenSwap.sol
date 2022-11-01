@@ -44,7 +44,7 @@ contract TokenSwap {
         uint256 ratio
     ) public onlyOwner {
         rates[token1][token2] = ratio;
-        rates[token2][token1] = ratio == 10000 ? 10000 : 10000 / ratio * 10000;
+        rates[token2][token1] = ratio == ratioDecimal ? ratioDecimal : ratioDecimal / ratio * ratioDecimal; 
     }
 
     function getRatio(address token1, address token2)
